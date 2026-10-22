@@ -61,7 +61,7 @@ DB_PASSWORD=
 DB_NAME=latihan_retail
 
 # --- Backend leaderboard (diberikan pemateri) ---
-BE_API_URL=http://localhost:3000/api
+BE_API_URL=http://195.88.211.226:4001/api
 SERVICE_KEY=isi-sesuai-backend
 ```
 
