@@ -62,7 +62,7 @@ DB_NAME=latihan_retail
 
 # --- Backend leaderboard (diberikan pemateri) ---
 BE_API_URL=http://195.88.211.226:4001/api
-SERVICE_KEY=isi-sesuai-backend
+SERVICE_KEY=55+IpUpSS2ogyxwBUw
 ```
 
 | Variabel | Wajib | Keterangan | Nilai umum |
