@@ -22,6 +22,8 @@ export async function POST(req, { params }) {
   // Poin hanya diklaim dari server (SERVICE_KEY) setelah verifikasi lolos; backend menjamin hanya sekali per kasus.
   const claim = await be(`/cases/${Number(id)}/claim`, { method: "POST", token, service: true });
   if (claim.status === 401) return NextResponse.json({ error: "Sesi berakhir" }, { status: 401 });
+  if (claim.status === 403 && /belum dibuka/i.test(claim.data.error || "")) // minggu dikunci dosen: pengecekan lolos tetapi poin belum bisa diklaim
+    return NextResponse.json({ ok: true, data: result.data, claim: { status: "locked", message: claim.data.error } });
   return NextResponse.json({
     ok: true, data: result.data,
     claim: claim.ok ? { status: claim.data.awarded ? "awarded" : "already", points: claim.data.points, poin: claim.data.poin } : { status: "error", message: claim.data.error || "Gagal memperbarui poin" },

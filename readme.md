@@ -1,6 +1,6 @@
 # project-web-learn (DataQuest Lab)
 
-Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 5 kasus bertingkat. Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
+Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 10 kasus bertingkat (Minggu 1: kasus 1-5, Minggu 2: kasus 6-10). Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
 
 ## Daftar isi
 1. [Prasyarat](#prasyarat)
@@ -11,9 +11,10 @@ Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQ
 6. [Menjalankan aplikasi](#menjalankan-aplikasi)
 7. [Alur penggunaan](#alur-penggunaan)
 8. [Daftar kasus](#daftar-kasus)
-9. [Arsitektur & keamanan](#arsitektur--keamanan)
-10. [Troubleshooting](#troubleshooting)
-11. [Struktur proyek](#struktur-proyek)
+9. [Minggu 2: update & kasus 6-10](#minggu-2-update--kasus-6-10)
+10. [Arsitektur & keamanan](#arsitektur--keamanan)
+11. [Troubleshooting](#troubleshooting)
+12. [Struktur proyek](#struktur-proyek)
 
 ## Prasyarat
 
@@ -137,11 +138,13 @@ Setelah `npm start` berjalan, buka **http://localhost:3001**. Biarkan terminal t
 ## Alur penggunaan
 
 1. Buka **/register**, cari **nama atau NIM** pada dropdown (daftar berasal dari master data backend), buat password (min. 8 karakter) dan konfirmasinya. Akun dibuat dengan **0 poin** dan kamu langsung masuk.
-2. Dari **Dashboard**, buka Kasus 1 lalu tekan **Jalankan pengecekan**.
+2. Dari **Dashboard**, pilih tab **Minggu 1** / **Minggu 2**, buka kasus lalu tekan **Jalankan pengecekan**. Kasus yang belum dibuka dosen tampil dengan label *Belum dibuka*.
 3. Baca daftar masalah yang tampil (tabel/kolom hilang, tipe data salah, relasi kurang, dsb.), perbaiki di phpMyAdmin/HeidiSQL, lalu **Cek ulang**.
 4. Jika lolos, antarmuka hasil muncul dan poin ditambahkan otomatis. Mengulang kasus yang sudah selesai **tidak** menambah poin (ditampilkan lewat notifikasi).
 
 ## Daftar kasus
+
+### Minggu 1
 
 | # | Level | Poin | Fokus | Petunjuk |
 |---|---|---|---|---|
@@ -151,7 +154,37 @@ Setelah `npm start` berjalan, buka **http://localhost:3001**. Biarkan terminal t
 | 4 | Lanjutan | 250 | Relasi N-M `detail_pesanan`, composite PRIMARY KEY | tips singkat |
 | 5 | Mahir | 300 | VIEW `v_laporan_penjualan`, INDEX, konsistensi data | tanpa petunjuk |
 
-Total maksimum: **1000 poin**. Masing-masing kasus memvalidasi nama tabel/kolom, tipe data, PRIMARY/FOREIGN KEY, UNIQUE, INDEX, serta kelayakan data.
+Total Minggu 1: **1000 poin**. Masing-masing kasus memvalidasi nama tabel/kolom, tipe data, PRIMARY/FOREIGN KEY, UNIQUE, INDEX, serta kelayakan data.
+
+## Minggu 2: update & kasus 6-10
+
+Minggu 2 memakai domain POS **"Kedai Kopi Nusantara"** dan **database yang sama** dengan minggu 1 (tabel `produk` + `kategori_id` dari kasus 2 dipakai ulang). Tidak ada variabel `.env.local` baru.
+
+**Update aplikasi** (hentikan server dengan `Ctrl+C` dulu):
+
+```bash
+git pull
+npm install
+npm run build
+npm start        # http://localhost:3001
+```
+
+### Daftar kasus Minggu 2
+
+| # | Level | Poin | Fokus | Petunjuk |
+|---|---|---|---|---|
+| 6 | Pemula | 120 | Tabel `kasir`: UNIQUE, CHECK/ENUM `role`, DEFAULT | ERD + SQL awal |
+| 7 | Dasar | 170 | Normalisasi spreadsheet datar `struk_lama` menjadi `metode_bayar`, `struk`, `struk_item` | ERD |
+| 8 | Menengah | 220 | Aturan integritas: ON DELETE CASCADE/RESTRICT, CHECK `qty > 0` dan `stok >= 0` | tips singkat |
+| 9 | Lanjutan | 270 | `stok_mutasi` + checkout dengan transaksi (COMMIT/ROLLBACK), total dan stok konsisten | tips + pola SQL |
+| 10 | Mahir | 320 | TRIGGER AFTER INSERT pada `struk_item`, INDEX `struk.waktu`, VIEW `v_rekap_kasir_harian` | tanpa petunjuk |
+
+Total Minggu 2: **1100 poin** (Minggu 1 + Minggu 2 = **2100 poin**).
+
+Catatan Minggu 2:
+- Kasus Minggu 2 baru bisa dikerjakan setelah **dosen membukanya**. Jika belum dibuka, kartu kasus bertanda *Belum dibuka* dan poin belum bisa diklaim (soal tetap bisa dibaca, tombol pengecekan dinonaktifkan).
+- Kasus 6, 8, dan 10 juga **menguji perilaku** database: aplikasi mencoba INSERT/DELETE/UPDATE uji di dalam transaksi yang **selalu di-ROLLBACK** (tanpa COMMIT dan tanpa DDL), sehingga datamu tidak berubah. Syaratnya semua tabel memakai engine **InnoDB**; jika tidak, pengecekan ditolak dengan pesan `ENGINE_MISMATCH`. Penghitung AUTO_INCREMENT bisa melompat karena uji ini; itu normal.
+- Kerjakan berurutan 6 → 10; tiap kasus memakai tabel kasus sebelumnya.
 
 ## Arsitektur & keamanan
 
@@ -181,6 +214,8 @@ Batasan: karena pengecekan memakai database di laptop masing-masing, sistem ini 
 | Dropdown nama kosong / "Gagal memuat mahasiswa" | `BE_API_URL` salah atau backend tidak terjangkau | Pastikan URL diakhiri `/api` dan dapat dibuka dari browser. |
 | Notifikasi "Poin belum tersimpan" (403) | `SERVICE_KEY` tidak sama dengan backend | Gunakan kunci yang diberikan pemateri. |
 | `EADDRINUSE` port 3001 | Port dipakai proses lain | Hentikan proses tersebut atau ubah port pada script `start` di `package.json`. |
+| Notifikasi "Tugas minggu ini belum dibuka" | Dosen belum membuka kasus minggu tersebut | Tunggu dosen membukanya, lalu cek ulang. |
+| `ENGINE_MISMATCH` pada kasus Minggu 2 | Tabel memakai MyISAM, bukan InnoDB | `ALTER TABLE nama_tabel ENGINE=InnoDB;` (FOREIGN KEY & transaksi butuh InnoDB). |
 | Sudah login tetapi kembali ke halaman login | Sesi berakhir | Login ulang dengan NIM dan password. |
 
 ## Struktur proyek
@@ -188,8 +223,8 @@ Batasan: karena pengecekan memakai database di laptop masing-masing, sistem ini 
 ```
 app/                  halaman (login, register, dashboard, case/[id]) + route handlers (/api/*)
 components/           komponen UI (Combobox, Toast, AuthForm, CaseClient, views hasil)
-lib/cases.js          metadata & brief kasus (aman dipakai di client)
-lib/checker.js        validator skema + pengambil data per kasus (server only)
+lib/cases.js          metadata & brief kasus per minggu (aman dipakai di client)
+lib/checker.js        validator skema + uji perilaku (transaksi ROLLBACK) + pengambil data per kasus (server only)
 lib/be.js             klien API backend + helper cookie/Origin (server only)
 .env.example          templat konfigurasi
 ```

@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Copy, Database, Lightbulb, Play, RefreshCw, TriangleAlert, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Copy, Database, Lightbulb, Lock, Play, RefreshCw, TriangleAlert, XCircle } from "lucide-react";
 import { caseById, CASES } from "@/lib/cases";
 import { Shell, useProgress, ICONS } from "./Dashboard";
 import { ResultView } from "./views";
@@ -12,7 +12,7 @@ function Erd({ tables }) {
   return (
     <div className="erd">{tables.map((t, i) => (
       <div className="erd-w" key={t.name}>
-        {i > 0 && <div className="rel"><span>1</span><i /><span>N</span></div>}
+        {i > 0 && t.rel !== false && <div className="rel"><span>1</span><i /><span>N</span></div>}
         <div className="erd-t"><header><Database size={14} />{t.name}</header>
           {t.cols ? t.cols.map(([c, ty, n]) => <div key={c} className="erd-c"><b>{c}</b><em>{ty}</em>{n && <small>{n}</small>}</div>) : <div className="erd-c mut"><small>kolom: tentukan sendiri</small></div>}</div>
       </div>))}</div>
@@ -36,7 +36,7 @@ export default function CaseClient({ id }) {
   const c = caseById(id), I = ICONS[c.icon], router = useRouter(), toast = useToast();
   const [st, , setSt] = useProgress();
   const [state, setState] = useState({ s: "idle" }), [copied, setCopied] = useState(false), host = useRef();
-  const done = (st.completed || []).includes(id);
+  const done = (st.completed || []).includes(id), locked = (st.open || {})[id] === false;
   const next = CASES.find(x => x.id === id + 1);
 
   const run = async () => {
@@ -50,6 +50,7 @@ export default function CaseClient({ id }) {
     burst(host.current);
     const k = d.claim;
     if (k.status === "awarded") { toast({ tone: "ok", title: `+${k.points} poin!`, text: `Kasus ${id} selesai. Total poinmu ${k.poin}.`, ms: 6500 }); setSt(s => ({ ...s, poin: k.poin, completed: [...(s.completed || []), id] })); }
+    else if (k.status === "locked") toast({ tone: "warn", title: "Tugas belum dibuka", text: k.message || "Tugas minggu ini belum dibuka dosen. Poin belum bisa diklaim, coba lagi setelah dibuka.", ms: 7000 });
     else if (k.status === "already") { toast({ tone: "warn", title: "Poin sudah pernah didapat", text: "Kasus ini sudah kamu selesaikan sebelumnya, poin tidak ditambah lagi.", ms: 6500 }); setSt(s => ({ ...s, poin: k.poin, completed: (s.completed || []).includes(id) ? s.completed : [...(s.completed || []), id] })); }
     else toast({ tone: "err", title: "Poin belum tersimpan", text: k.message });
   };
@@ -62,18 +63,21 @@ export default function CaseClient({ id }) {
         <div className="case-grid">
           <aside className="brief">
             <div className="brief-h"><span className="ci lg"><I size={26} /></span><div><small className="lv">Level {c.id} • {c.level} • +{c.points} poin</small><h1>{c.title}</h1></div>{done && <span className="okb"><Check size={14} />Selesai</span>}</div>
+            {locked && <div className="callout"><Lock size={18} />Tugas minggu ini belum dibuka dosen. Kamu bisa membaca soal, tetapi pengecekan dan poin baru aktif setelah dibuka.</div>}
             <p className="story">{c.story}</p>
+            {c.sheet && <div className="sheet"><small>{c.sheet.title}</small><div className="tw"><table><thead><tr>{c.sheet.head.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{c.sheet.rows.map((r, i) => <tr key={i}>{r.map((v, j) => <td key={j}>{v}</td>)}</tr>)}</tbody></table></div></div>}
             <h3>Yang harus ada</h3>
             <ul className="reqs">{c.reqs.map(r => <li key={r}><CheckCircle2 size={17} />{r}</li>)}</ul>
             {c.erd && <><h3>{c.hints === "full" ? "Gambaran ERD" : "Sketsa relasi"}</h3><Erd tables={c.erd} /></>}
             {c.starter && <div className="code"><div className="code-h"><b>SQL awal (phpMyAdmin / tab SQL)</b><button onClick={copy}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? "Tersalin" : "Salin"}</button></div><pre>{c.starter}</pre></div>}
+            {c.snippet && <div className="code"><div className="code-h"><b>{c.snippet.title}</b></div><pre>{c.snippet.sql}</pre></div>}
             {c.tips.length > 0 && <><h3>Tips &amp; trik</h3><ul className="tips">{c.tips.map(t => <li key={t}><Lightbulb size={16} />{t}</li>)}</ul></>}
             {c.hints === "none" && <div className="callout"><TriangleAlert size={18} />Tanpa petunjuk: gunakan semua yang sudah kamu pelajari. Baca pesan error dengan teliti.</div>}
           </aside>
 
           <section className="result" ref={host}>
             <div className="result-h"><b>Pengecekan database</b>
-              <button className="btn" onClick={run} disabled={state.s === "loading"}>{state.s === "idle" ? <Play size={17} /> : <RefreshCw size={17} className={state.s === "loading" ? "rot" : ""} />}{state.s === "idle" ? "Jalankan pengecekan" : "Cek ulang"}</button></div>
+              <button className="btn" onClick={run} disabled={state.s === "loading" || locked}>{state.s === "idle" ? <Play size={17} /> : <RefreshCw size={17} className={state.s === "loading" ? "rot" : ""} />}{state.s === "idle" ? "Jalankan pengecekan" : "Cek ulang"}</button></div>
             {state.s === "idle" && <div className="empty-r"><Database size={40} /><h3>Belum ada pengecekan</h3><p>Siapkan database lokalmu, lalu tekan tombol di atas. Aplikasi akan membaca skema dan datanya langsung dari MySQL.</p></div>}
             {state.s === "loading" && <Scan />}
             {state.s === "fail" && (
