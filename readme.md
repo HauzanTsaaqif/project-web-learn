@@ -1,6 +1,6 @@
 # project-web-learn (DataQuest Lab)
 
-Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 10 kasus bertingkat (Minggu 1: kasus 1-5, Minggu 2: kasus 6-10). Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
+Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 15 kasus bertingkat (Minggu 1: kasus 1-5, Minggu 2: kasus 6-10, Minggu 3: kasus 11-15). Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
 
 ## Daftar isi
 1. [Prasyarat](#prasyarat)
@@ -12,6 +12,8 @@ Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQ
 7. [Alur penggunaan](#alur-penggunaan)
 8. [Daftar kasus](#daftar-kasus)
 9. [Minggu 2: update & kasus 6-10](#minggu-2-update--kasus-6-10)
+   - [Minggu 3: update & kasus 11-15](#minggu-3-update--kasus-11-15)
+   - [Riwayat poin & waktu pengerjaan](#riwayat-poin--waktu-pengerjaan)
 10. [Arsitektur & keamanan](#arsitektur--keamanan)
 11. [Troubleshooting](#troubleshooting)
 12. [Struktur proyek](#struktur-proyek)
@@ -186,6 +188,48 @@ Catatan Minggu 2:
 - Kasus 6, 8, dan 10 juga **menguji perilaku** database: aplikasi mencoba INSERT/DELETE/UPDATE uji di dalam transaksi yang **selalu di-ROLLBACK** (tanpa COMMIT dan tanpa DDL), sehingga datamu tidak berubah. Syaratnya semua tabel memakai engine **InnoDB**; jika tidak, pengecekan ditolak dengan pesan `ENGINE_MISMATCH`. Penghitung AUTO_INCREMENT bisa melompat karena uji ini; itu normal.
 - Kerjakan berurutan 6 → 10; tiap kasus memakai tabel kasus sebelumnya.
 
+## Minggu 3: update & kasus 11-15
+
+Minggu 3 (Aplikasi ↔ database) memakai **database yang sama** dengan minggu 1-2. Tidak ada variabel `.env.local` baru. Ada **satu dependensi baru** (`bcryptjs`, untuk generator hash), jadi `npm install` wajib dijalankan.
+
+```bash
+git pull
+npm install
+npm run build
+npm start        # http://localhost:3001
+```
+
+### Daftar kasus Minggu 3
+
+| # | Level | Poin | Fokus | Petunjuk |
+|---|---|---|---|---|
+| 11 | Pemula | 140 | Tabel `pengguna` dengan `password_hash` bcrypt (60 karakter, cost >= 10, tanpa hash kembar) | ERD + SQL awal + halaman **Generator hash** (`/hash`) |
+| 12 | Dasar | 190 | Audit & soft delete: `dibuat_pada`, `diubah_pada` (ON UPDATE CURRENT_TIMESTAMP), `dihapus_pada`, VIEW `v_produk_aktif` | SQL awal |
+| 13 | Menengah | 240 | RBAC: `peran`, `izin`, `peran_izin` (PK gabungan), `pengguna.peran_id`; kasir tidak boleh `produk.hapus` | sketsa relasi |
+| 14 | Lanjutan | 290 | **Menulis API sendiri**: `GET /api/latihan/produk` dengan `q`, `page`, `limit`; aman dari SQL injection | tips + kerangka route |
+| 15 | Mahir | 340 | Stored procedure `sp_checkout(...)` yang menolak stok kurang dengan `SIGNAL SQLSTATE '45000'` | tanpa petunjuk |
+
+Total Minggu 3: **1200 poin** (Minggu 1-3 = **3300 poin**).
+
+Catatan Minggu 3:
+- Kasus 11-15 **ditutup secara bawaan**; dosen membukanya dari dashboard setelah tugas dijelaskan.
+- **Kasus 14** memanggil route buatanmu lewat HTTP ke server aplikasi ini sendiri. Kerangkanya ada di `app/api/latihan/produk/route.js` (sudah tersedia setelah `git pull`); koneksi MySQL bisa dipakai dari `lib/latihan-db.js`. Setiap mengubah route, jalankan ulang `npm run build` lalu `npm start` (atau `npm run dev`). Aplikasi mengirim input aneh (`page=abc`, `limit=100000`) dan payload injection (`' OR 1=1 -- `, `UNION SELECT ...`, `DROP TABLE ...`), lalu memeriksa hasilnya serta memastikan tabel tidak berubah.
+- **Kasus 12 dan 15** menguji perilaku di dalam transaksi yang **selalu di-ROLLBACK** (tanpa COMMIT dan tanpa DDL), jadi datamu tidak berubah. Syaratnya semua tabel terkait berengine **InnoDB**. Prosedur kasus 15 **tidak boleh** berisi `COMMIT` atau `START TRANSACTION`: transaksi diatur oleh pemanggil.
+- Kasus 15 memakai tabel kasus 6-9. Jika trigger kasus 10 masih aktif, stok dan mutasi tidak boleh tercatat dua kali.
+- Kerjakan berurutan 11 → 15; kasus 13 memakai tabel `pengguna` dari kasus 11 dan kasus 14 memakai `produk` (dan `dihapus_pada` dari kasus 12 bila ada).
+
+## Riwayat poin & waktu pengerjaan
+
+Setiap kali kasus selesai, backend mencatat **riwayat poin masuk** beserta seberapa cepat kamu mengerjakannya:
+
+| Data | Cara dicatat |
+|---|---|
+| Waktu mulai | Pertama kali halaman kasus dibuka (`POST /api/case/:id/start`, dicatat sekali saja) |
+| Percobaan | Setiap tombol **Jalankan pengecekan** (lolos maupun gagal) dikirim server ini ke backend dengan `SERVICE_KEY` |
+| Durasi | Selisih waktu mulai sampai pengecekan yang lolos, disimpan bersama poin |
+
+Riwayatmu bisa dilihat di **Dashboard → Riwayat poin** (kasus, mulai, selesai, durasi, jumlah percobaan, poin, dan total berjalan). Dosen melihat perbandingan antar mahasiswa di `/#/super-admin` (tab *Riwayat submit* dan *Kecepatan*). Backend yang belum diperbarui tetap bekerja: pencatatan waktu diabaikan diam-diam dan poin tetap terklaim.
+
 ## Arsitektur & keamanan
 
 ```
@@ -219,6 +263,8 @@ Batasan: karena pengecekan memakai database di laptop masing-masing, sistem ini 
 | Sudah login tetapi kembali ke halaman login | Sesi berakhir | Login ulang dengan NIM dan password. |
 
 ## Struktur proyek
+
+> Minggu 3 menambahkan: `app/hash` (generator hash), `app/api/hash`, `app/api/history`, `app/api/case/[id]/start`, `app/api/latihan/produk` (kerangka kasus 14), dan `lib/latihan-db.js`.
 
 ```
 app/                  halaman (login, register, dashboard, case/[id]) + route handlers (/api/*)

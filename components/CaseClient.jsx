@@ -1,10 +1,10 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Copy, Database, Lightbulb, Lock, Play, RefreshCw, TriangleAlert, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Copy, Database, KeyRound, Lightbulb, Lock, Play, RefreshCw, TriangleAlert, XCircle } from "lucide-react";
 import { caseById, CASES } from "@/lib/cases";
-import { Shell, useProgress, ICONS } from "./Dashboard";
+import { Shell, useProgress, ICONS, dur } from "./Dashboard";
 import { ResultView } from "./views";
 import { useToast } from "./ui";
 
@@ -38,6 +38,8 @@ export default function CaseClient({ id }) {
   const [state, setState] = useState({ s: "idle" }), [copied, setCopied] = useState(false), host = useRef();
   const done = (st.completed || []).includes(id), locked = (st.open || {})[id] === false;
   const next = CASES.find(x => x.id === id + 1);
+  // catat waktu PERTAMA kali halaman kasus dibuka (titik awal penghitungan durasi); backend mengabaikan panggilan berikutnya
+  useEffect(() => { fetch(`/api/case/${id}/start`, { method: "POST" }).catch(() => {}); }, [id]);
 
   const run = async () => {
     setState({ s: "loading" });
@@ -49,7 +51,7 @@ export default function CaseClient({ id }) {
     setState({ s: "ok", data: d.data });
     burst(host.current);
     const k = d.claim;
-    if (k.status === "awarded") { toast({ tone: "ok", title: `+${k.points} poin!`, text: `Kasus ${id} selesai. Total poinmu ${k.poin}.`, ms: 6500 }); setSt(s => ({ ...s, poin: k.poin, completed: [...(s.completed || []), id] })); }
+    if (k.status === "awarded") { toast({ tone: "ok", title: `+${k.points} poin!`, text: `Kasus ${id} selesai${k.duration != null ? ` dalam ${dur(k.duration)}` : ""}${k.attempts ? `, ${k.attempts} kali percobaan` : ""}. Total poinmu ${k.poin}.`, ms: 6500 }); setSt(s => ({ ...s, poin: k.poin, completed: [...(s.completed || []), id] })); }
     else if (k.status === "locked") toast({ tone: "warn", title: "Tugas belum dibuka", text: k.message || "Tugas minggu ini belum dibuka dosen. Poin belum bisa diklaim, coba lagi setelah dibuka.", ms: 7000 });
     else if (k.status === "already") { toast({ tone: "warn", title: "Poin sudah pernah didapat", text: "Kasus ini sudah kamu selesaikan sebelumnya, poin tidak ditambah lagi.", ms: 6500 }); setSt(s => ({ ...s, poin: k.poin, completed: (s.completed || []).includes(id) ? s.completed : [...(s.completed || []), id] })); }
     else toast({ tone: "err", title: "Poin belum tersimpan", text: k.message });
@@ -69,6 +71,7 @@ export default function CaseClient({ id }) {
             <h3>Yang harus ada</h3>
             <ul className="reqs">{c.reqs.map(r => <li key={r}><CheckCircle2 size={17} />{r}</li>)}</ul>
             {c.erd && <><h3>{c.hints === "full" ? "Gambaran ERD" : "Sketsa relasi"}</h3><Erd tables={c.erd} /></>}
+            {c.tool && <Link className="btn alt sm" href={c.tool.href}><KeyRound size={16} />{c.tool.label}</Link>}
             {c.starter && <div className="code"><div className="code-h"><b>SQL awal (phpMyAdmin / tab SQL)</b><button onClick={copy}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? "Tersalin" : "Salin"}</button></div><pre>{c.starter}</pre></div>}
             {c.snippet && <div className="code"><div className="code-h"><b>{c.snippet.title}</b></div><pre>{c.snippet.sql}</pre></div>}
             {c.tips.length > 0 && <><h3>Tips &amp; trik</h3><ul className="tips">{c.tips.map(t => <li key={t}><Lightbulb size={16} />{t}</li>)}</ul></>}

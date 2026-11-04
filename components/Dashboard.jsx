@@ -2,11 +2,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, ArrowRight, BarChart3, Check, Layers, Lock, LogOut, Package, Receipt, ReceiptText, Trophy, UserCog, Users, Zap } from "lucide-react";
+import { Archive, ArrowLeftRight, ArrowRight, BarChart3, Check, ChevronDown, Clock, Cog, KeyRound, Layers, Lock, LogOut, Package, Plug, Receipt, ReceiptText, ShieldCheck, Trophy, UserCog, Users, Zap } from "lucide-react";
 import { CASES, WEEKS } from "@/lib/cases";
 import { Dobi, useToast } from "./ui";
 
-export const ICONS = { package: Package, layers: Layers, users: Users, receipt: Receipt, chart: BarChart3, usercog: UserCog, receipttext: ReceiptText, lock: Lock, arrows: ArrowLeftRight, zap: Zap };
+export const ICONS = { package: Package, layers: Layers, users: Users, receipt: Receipt, chart: BarChart3, usercog: UserCog, receipttext: ReceiptText, lock: Lock, arrows: ArrowLeftRight, zap: Zap, shield: ShieldCheck, archive: Archive, keyround: KeyRound, plug: Plug, cog: Cog };
+
+// 1 menit 05 detik / 12 detik; null = tidak tercatat (poin lama sebelum pencatatan waktu ada)
+export const dur = s => (s == null ? "-" : s < 60 ? `${s} dtk` : s < 3600 ? `${Math.floor(s / 60)} mnt ${String(s % 60).padStart(2, "0")} dtk` : `${Math.floor(s / 3600)} jam ${Math.floor(s % 3600 / 60)} mnt`);
+
+// Riwayat poin masuk: satu baris per kasus yang selesai (urut waktu), lengkap dengan lama pengerjaan dan jumlah percobaan
+function History({ poin }) {
+  const [open, setOpen] = useState(false), [h, setH] = useState(null);
+  useEffect(() => { if (open && !h) fetch("/api/history").then(r => r.json()).then(setH).catch(() => setH({ rows: [], total: 0 })); }, [open]); // eslint-disable-line
+  const rows = h?.rows || [], fmt = v => (v ? new Date(v).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-");
+  return (
+    <section className="hist">
+      <button className="hist-h" onClick={() => setOpen(o => !o)} aria-expanded={open}><Clock size={18} /><b>Riwayat poin</b><small>{poin ?? 0} poin terkumpul</small><ChevronDown size={18} className={open ? "up" : ""} /></button>
+      {open && (!h ? <p className="mut">Memuat...</p> : !rows.length ? <p className="mut">{h.unavailable ? "Riwayat belum tersedia di backend." : "Belum ada poin masuk. Selesaikan kasus pertamamu."}</p> :
+        <div className="tw"><table><thead><tr><th>Kasus</th><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Percobaan</th><th>Poin</th><th>Total</th></tr></thead>
+          <tbody>{rows.map(r => <tr key={r.id}><td><b>{r.case_id}</b> {r.title}</td><td>{fmt(r.started_at)}</td><td>{fmt(r.completed_at)}</td><td>{dur(r.duration_seconds)}</td><td>{r.attempts ?? "-"}</td><td><b className="pos">+{r.points}</b></td><td>{r.running_total}</td></tr>)}</tbody></table></div>)}
+    </section>
+  );
+}
 
 export function Shell({ player, poin, children }) {
   const router = useRouter(), toast = useToast();
@@ -67,6 +85,7 @@ export default function Dashboard() {
             );
           })}
         </section>
+        <History poin={st.poin} />
       </main>
     </Shell>
   );

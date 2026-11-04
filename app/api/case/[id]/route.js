@@ -16,7 +16,12 @@ export async function POST(req, { params }) {
   last.set(token, now);
   if (last.size > 500) last.clear();
 
-  const result = await runCase(Number(id));
+  // Kasus 14 memanggil endpoint buatan mahasiswa lewat HTTP ke server ini sendiri (127.0.0.1 + port yang sedang dipakai)
+  const port = (req.headers.get("host") || "").split(":")[1] || process.env.PORT || "3001";
+  const result = await runCase(Number(id), { origin: `http://127.0.0.1:${port}` });
+
+  // Catat setiap percobaan (lolos/gagal) ke backend: dasar penghitungan jumlah percobaan. Kegagalan pencatatan tidak mengganggu pengecekan.
+  await be(`/cases/${Number(id)}/attempt`, { method: "POST", token, service: true, body: { passed: !!result.ok, issues: (result.issues || []).map(x => x.code) } });
   if (!result.ok) return NextResponse.json({ ok: false, issues: result.issues });
 
   // Poin hanya diklaim dari server (SERVICE_KEY) setelah verifikasi lolos; backend menjamin hanya sekali per kasus.
@@ -26,6 +31,6 @@ export async function POST(req, { params }) {
     return NextResponse.json({ ok: true, data: result.data, claim: { status: "locked", message: claim.data.error } });
   return NextResponse.json({
     ok: true, data: result.data,
-    claim: claim.ok ? { status: claim.data.awarded ? "awarded" : "already", points: claim.data.points, poin: claim.data.poin } : { status: "error", message: claim.data.error || "Gagal memperbarui poin" },
+    claim: claim.ok ? { status: claim.data.awarded ? "awarded" : "already", points: claim.data.points, poin: claim.data.poin, duration: claim.data.duration_seconds ?? null, attempts: claim.data.attempts ?? null } : { status: "error", message: claim.data.error || "Gagal memperbarui poin" },
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeftRight, Check, Coffee, Crown, Mail, Package, Receipt, ShieldCheck, ShoppingBag, TrendingUp, UserCheck, UserCog, UserX, Zap } from "lucide-react";
+import { Archive, ArrowLeftRight, Check, Coffee, Cog, Crown, Eye, EyeOff, KeyRound, Lock, Mail, Package, Plug, Receipt, ShieldCheck, ShoppingBag, Trash2, TrendingUp, UserCheck, UserCog, UserX, X, Zap } from "lucide-react";
 
 const rp = n => "Rp " + Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 });
 const dt = v => new Date(v).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -164,7 +164,96 @@ export function ShiftView({ rows, total, uji }) {
   );
 }
 
+/* ---------- Minggu 3 ---------- */
+const TXT = v => (v == null ? "-" : String(v));
+
+/* 11. Akun pengguna dengan hash bcrypt */
+export function HashView({ rows }) {
+  const r0 = rows[0], cost = Math.min(...rows.map(r => r.cost));
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={KeyRound} label="Akun terlindungi" value={rows.length} /><Kpi icon={ShieldCheck} label="Cost bcrypt terendah" value={cost} tone="p" /><Kpi icon={Lock} label="Panjang hash" value={r0.len} tone="b" /></div>
+      <section className="panel"><h4>Anatomi satu hash bcrypt</h4>
+        <div className="anat" aria-label="Bagian-bagian hash bcrypt"><span className="a1"><b>{r0.pre.slice(0, 4)}</b><small>algoritma</small></span><span className="a2"><b>{r0.pre.slice(4, 6)}</b><small>cost (2^{r0.cost} putaran)</small></span><span className="a3"><b>{r0.salt}</b><small>salt acak 22 karakter</small></span><span className="a4"><b>••••••••••••••••••••••••••••••••</b><small>hash 31 karakter</small></span></div>
+        <small>Salt yang berbeda membuat password yang sama menghasilkan hash yang berbeda, sehingga penyerang tidak bisa memakai tabel hash yang sudah dihitung sebelumnya.</small></section>
+      <section className="panel"><h4>Tabel pengguna</h4>
+        <div className="staff">{rows.map((u, i) => (
+          <article key={u.id} className="staff-c" style={{ "--i": i }}><span className="av">{u.nama.slice(0, 1)}</span>
+            <div><b>{u.nama}</b><small>@{u.username} • sejak {TXT(u.dibuat_pada)}</small><code className="hmask">{u.pre}{u.salt.slice(0, 6)}…••••••</code></div>
+            <span className="role">bcrypt • cost {u.cost}</span><span className="dot on" title="Hash valid" /></article>))}</div>
+        <small>Password asli tidak pernah ditampilkan. Aplikasi hanya membandingkan hash saat login.</small></section>
+    </div>
+  );
+}
+
+/* 12. Audit & soft delete */
+export function AuditView({ rows, aktif, dihapus, uji }) {
+  const [semua, setSemua] = useState(true), shown = semua ? rows : rows.filter(r => !r.dihapus_pada);
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Package} label="Semua baris" value={rows.length} /><Kpi icon={Eye} label="Terlihat di VIEW" value={aktif} tone="b" /><Kpi icon={Archive} label="Soft delete" value={dihapus} tone="p" /></div>
+      <section className="panel"><div className="ph"><h4>Jejak audit produk</h4>
+        <button className="chipbtn" onClick={() => setSemua(s => !s)} aria-pressed={semua}>{semua ? <EyeOff size={14} /> : <Eye size={14} />}{semua ? "Sembunyikan yang dihapus" : "Tampilkan semua"}</button></div>
+        <div className="tw"><table><thead><tr><th>Produk</th><th>Stok</th><th>Dibuat</th><th>Diubah</th><th>Status</th></tr></thead>
+          <tbody>{shown.map((r, i) => <tr key={r.id} className={r.dihapus_pada ? "gone" : ""} style={{ "--i": i }}><td>{r.nama}</td><td>{r.stok}</td><td>{TXT(r.dibuat_pada)}</td><td>{TXT(r.diubah_pada)}</td>
+            <td>{r.dihapus_pada ? <span className="tag del">dihapus {r.dihapus_pada}</span> : <span className="tag act">aktif</span>}</td></tr>)}</tbody></table></div>
+        <small>Baris yang dihapus tetap ada untuk audit, tetapi aplikasi hanya membaca VIEW v_produk_aktif.</small></section>
+      {uji?.otomatis && <section className="panel"><h4>Uji ON UPDATE</h4><p className="trig"><Zap size={16} />Satu UPDATE stok dijalankan lalu dibatalkan: <b>diubah_pada</b> terisi otomatis oleh database, tanpa kode aplikasi.</p></section>}
+    </div>
+  );
+}
+
+/* 13. Matriks peran x izin + simulasi akses */
+export function RbacView({ grid, izin, users }) {
+  const [uid, setUid] = useState(users[0]?.id), [res, setRes] = useState(null);
+  const u = users.find(x => x.id === uid), g = u && grid.find(x => x.peran === u.peran);
+  const coba = kode => { const i = izin.findIndex(x => x.kode.toLowerCase() === kode); setRes({ kode, ok: !!(g && i >= 0 && g.izin[i]), who: u }); };
+  return (
+    <div className="dash">
+      <section className="panel"><h4>Matriks peran dan izin</h4>
+        <div className="tw"><table className="rbac"><thead><tr><th>Peran</th>{izin.map(i => <th key={i.id}>{i.kode}</th>)}</tr></thead>
+          <tbody>{grid.map(r => <tr key={r.peran}><td><b>{r.peran}</b></td>{r.izin.map((v, k) => <td key={k} className={v ? "yes" : "no"}>{v ? <Check size={16} /> : <X size={16} />}</td>)}</tr>)}</tbody></table></div></section>
+      <section className="panel"><h4>Coba sebagai pengguna</h4>
+        <div className="tabs2">{users.map(x => <button key={x.id} className={x.id === uid ? "on" : ""} onClick={() => { setUid(x.id); setRes(null); }}>{x.nama.split(" ")[0]}<small>{x.peran}</small></button>)}</div>
+        <div className="row-btn"><button className="btn sm" onClick={() => coba("produk.hapus")}><Trash2 size={15} />Hapus produk</button><button className="btn sm alt" onClick={() => coba("struk.buat")}><ShoppingBag size={15} />Buat struk</button></div>
+        {res && <div className={`access ${res.ok ? "ok" : "no"}`} key={res.kode + res.who.id}>{res.ok ? <Check size={18} /> : <X size={18} />}<span><b>{res.who.nama}</b> ({res.who.peran}) {res.ok ? "diizinkan" : "ditolak"} untuk <code>{res.kode}</code>.</span></div>}
+        <small>Aplikasi cukup bertanya "apakah peran ini punya izin X?". Peran baru berarti baris data baru, bukan kode baru.</small></section>
+    </div>
+  );
+}
+
+/* 14. Hasil uji API */
+export function ApiView({ tests, sample, payloads }) {
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Plug} label="Uji lolos" value={tests.length} /><Kpi icon={ShieldCheck} label="Payload injection ditolak" value={payloads.length} tone="p" /><Kpi icon={Package} label="Total produk" value={sample.total} tone="b" /></div>
+      <section className="panel"><h4>Hasil uji endpoint /api/latihan/produk</h4>
+        <div className="audit">{tests.map((t, i) => <div key={t.nama} className="audit-r" style={{ "--i": i }}><ShieldCheck size={20} /><div><b>{t.nama}</b><code>{t.detail}</code></div><span className="okb"><Check size={13} />Lolos</span></div>)}</div></section>
+      <section className="panel"><h4>Contoh respons (halaman 1)</h4><pre className="json">{JSON.stringify(sample, null, 2)}</pre></section>
+      <section className="panel"><h4>Payload yang dikirim aplikasi sebagai penyerang</h4><div className="pay">{payloads.map(p => <code key={p}>{p.trim()}</code>)}</div><small>Karena query memakai placeholder, semua payload diperlakukan sebagai teks biasa: tidak ada produk yang cocok.</small></section>
+    </div>
+  );
+}
+
+/* 15. Hasil uji stored procedure */
+export function ProcView({ uji }) {
+  if (!uji) return null;
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Cog} label="Total struk uji" value={uji.total ?? 0} fmt={rp} /><Kpi icon={Package} label={`Stok ${uji.stokAwal} → ${uji.stokAkhir}`} value={uji.qty} fmt={x => `-${Math.round(x)}`} tone="b" /><Kpi icon={ArrowLeftRight} label="Catatan mutasi" value={uji.mutasi} tone="p" /></div>
+      <section className="panel"><h4>Pemanggilan yang berhasil</h4>
+        <pre className="termx"><span className="p">mysql&gt;</span> CALL sp_checkout(kasir, metode, <b>{uji.produk}</b>, {uji.qty}, @sid);{"\n"}Query OK{"\n"}<span className="p">mysql&gt;</span> SELECT @sid;  <span className="o">→ {uji.sid}</span></pre>
+        <small>{uji.qty} x {uji.produk} @ {rp(uji.harga)}: struk, item, pengurangan stok, dan mutasi terbentuk bersama. Semuanya dibatalkan setelah uji (ROLLBACK).</small></section>
+      <div className="two">
+        <section className="panel"><h4>Stok tidak cukup</h4><pre className="termx err"><span className="p">ERROR 1644 (45000):</span>{"\n"}{uji.tolakStok}</pre></section>
+        <section className="panel"><h4>Qty tidak valid</h4><pre className="termx err"><span className="p">ERROR 1644 (45000):</span>{"\n"}{uji.tolakQty}</pre></section>
+      </div>
+    </div>
+  );
+}
+
 export function ResultView({ id, data }) {
   return { 1: <CatalogView produk={data.produk} />, 2: <CategoryView produk={data.produk} />, 3: <CrmView pelanggan={data.pelanggan} />, 4: <InvoiceView pesanan={data.pesanan} />, 5: <ReportView rows={data.rows} total={data.total} />,
-    6: <CashierView kasir={data.kasir} />, 7: <ReceiptView struk={data.struk} />, 8: <IntegrityView rules={data.rules} struk={data.struk} item={data.item} />, 9: <LedgerView mutasi={data.mutasi} stok={data.stok} />, 10: <ShiftView rows={data.rows} total={data.total} uji={data.uji} /> }[id];
+    6: <CashierView kasir={data.kasir} />, 7: <ReceiptView struk={data.struk} />, 8: <IntegrityView rules={data.rules} struk={data.struk} item={data.item} />, 9: <LedgerView mutasi={data.mutasi} stok={data.stok} />, 10: <ShiftView rows={data.rows} total={data.total} uji={data.uji} />,
+    11: <HashView rows={data.rows} />, 12: <AuditView rows={data.rows} aktif={data.aktif} dihapus={data.dihapus} uji={data.uji} />, 13: <RbacView grid={data.grid} izin={data.izin} users={data.users} />, 14: <ApiView tests={data.tests} sample={data.sample} payloads={data.payloads} />, 15: <ProcView uji={data.uji} /> }[id];
 }
