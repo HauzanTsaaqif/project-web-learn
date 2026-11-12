@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Archive, ArrowLeftRight, Check, Coffee, Cog, Crown, Eye, EyeOff, KeyRound, Lock, Mail, Package, Plug, Receipt, ShieldCheck, ShoppingBag, Trash2, TrendingUp, UserCheck, UserCog, UserX, X, Zap } from "lucide-react";
+import { Archive, ArrowLeftRight, BarChart3, Check, Coffee, Cog, Crown, Database, Eye, EyeOff, Gauge, KeyRound, Lock, Mail, Package, Plug, Receipt, ShieldCheck, ShoppingBag, Trash2, TrendingUp, UserCheck, UserCog, UserX, X, Zap } from "lucide-react";
 
 const rp = n => "Rp " + Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 });
 const dt = v => new Date(v).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -252,8 +252,84 @@ export function ProcView({ uji }) {
   );
 }
 
+/* ---------- Minggu 4 ---------- */
+
+/* 16. Hak user aplikasi */
+export function GrantView({ user, db, grants, allowed, denied }) {
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={KeyRound} label="Hak diberikan" value={allowed.length} /><Kpi icon={ShieldCheck} label="Hak yang ditolak" value={denied.length} tone="p" /><Kpi icon={Database} label="Database dijangkau" value={1} tone="b" /></div>
+      <section className="panel"><h4>Hasil SHOW GRANTS untuk {user}</h4>
+        <pre className="termx"><span className="p">mysql&gt;</span> SHOW GRANTS FOR CURRENT_USER();{"\n"}{grants.map((g, i) => <span key={i}>{g.replace(/ IDENTIFIED BY PASSWORD '[^']*'/i, " IDENTIFIED BY PASSWORD '…'")}{"\n"}</span>)}</pre>
+        <small>Hak hanya berlaku pada <code>{db}.*</code>. Itulah satu-satunya pintu yang boleh dipakai aplikasi.</small></section>
+      <div className="two">
+        <section className="panel"><h4>Boleh dilakukan aplikasi</h4><div className="pay">{allowed.map(p => <code key={p} style={{ background: "var(--g100)", color: "var(--g800)" }}>{p}</code>)}</div><small>Membaca menu, mencatat struk, mengubah stok.</small></section>
+        <section className="panel"><h4>Ditolak oleh database</h4><div className="pay">{denied.map(p => <code key={p}>{p}</code>)}</div><small>Penyerang yang menguasai aplikasi tetap tidak bisa menjalankan DROP atau mengubah struktur.</small></section>
+      </div>
+    </div>
+  );
+}
+
+/* 17. Hasil pemulihan backup */
+export function RestoreView({ tabel, db }) {
+  const baris = tabel.reduce((a, t) => a + t.baris, 0);
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Database} label={`Tabel pulih di ${db}`} value={tabel.filter(t => t.ok).length} /><Kpi icon={Package} label="Total baris" value={baris} tone="b" /><Kpi icon={ShieldCheck} label="Checksum cocok" value={tabel.filter(t => t.ok).length} tone="p" /></div>
+      <section className="panel"><h4>Pencocokan dengan isi backup</h4>
+        <div className="audit">{tabel.map((t, i) => <div key={t.tabel} className="audit-r" style={{ "--i": i }}><Database size={20} /><div><b>{t.tabel}</b><code>{t.baris.toLocaleString("id-ID")} baris</code></div><span className="okb"><Check size={13} />Identik</span></div>)}</div>
+        <small>Backup baru dianggap berguna setelah terbukti bisa dipulihkan. Jumlah baris dan checksum setiap tabel sama persis dengan sumbernya.</small></section>
+    </div>
+  );
+}
+
+/* 18. EXPLAIN dan index */
+export function IndexView({ total, explain, kolom, ms, tanggal, hasil }) {
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Package} label="Baris di tabel struk" value={total} /><Kpi icon={Gauge} label="Baris diperiksa (EXPLAIN)" value={explain.rows} tone="p" /><Kpi icon={Zap} label="Waktu query (ms)" value={ms} fmt={x => x.toFixed(1)} tone="b" /></div>
+      <section className="panel"><h4>EXPLAIN query laporan</h4>
+        <div className="tw"><table><thead><tr><th>type</th><th>key</th><th>rows</th><th>Extra</th></tr></thead><tbody><tr><td><span className="tag act">{explain.type}</span></td><td><code>{explain.key}</code></td><td>{explain.rows.toLocaleString("id-ID")}</td><td>{explain.extra || "-"}</td></tr></tbody></table></div>
+        <small>Sebelum index komposit: <b>type = ALL</b> dengan ±{total.toLocaleString("id-ID")} baris. Sekarang hanya {explain.rows.toLocaleString("id-ID")} baris yang disentuh.</small></section>
+      <div className="two">
+        <section className="panel"><h4>Index yang dipakai</h4><div className="pay">{kolom.map((c, i) => <code key={c} style={{ background: "var(--g100)", color: "var(--g800)" }}>{i + 1}. {c}</code>)}</div><small>Kolom dengan "=" lebih dulu, kolom rentang sesudahnya (awalan paling kiri).</small></section>
+        <section className="panel"><h4>Hasil laporan {tanggal}</h4><p className="trig"><Zap size={16} />{hasil.jumlah} struk, omzet <b>{rp(hasil.omzet)}</b>, dibaca dalam {ms} ms.</p></section>
+      </div>
+    </div>
+  );
+}
+
+/* 19. Hasil arsip */
+export function ArchiveView({ uji, arsip }) {
+  if (!uji) return null;
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={Archive} label="Struk uji dipindahkan" value={uji.dipindah} /><Kpi icon={Package} label="Tetap di struk" value={uji.tersisa} tone="b" /><Kpi icon={ShieldCheck} label="Panggil ulang aman" value={uji.ulang ? 1 : 0} fmt={x => (x >= 1 ? "Ya" : "Tidak")} tone="p" /></div>
+      <section className="panel"><h4>Pemanggilan yang diuji</h4>
+        <pre className="termx"><span className="p">mysql&gt;</span> START TRANSACTION;{"\n"}<span className="p">mysql&gt;</span> CALL sp_arsip_struk(<b>'{uji.batas}'</b>);{"\n"}Query OK{"\n"}<span className="p">mysql&gt;</span> ROLLBACK;  <span className="o">→ data aslimu tidak berubah</span></pre>
+        <small>Sebelum batas dipindahkan seluruhnya, yang tepat pada batas tetap tinggal. Aplikasi memakai data uji tahun 1999 lalu membatalkannya.</small></section>
+      <section className="panel"><h4>Isi tabel arsip saat ini</h4><p className="trig"><Archive size={16} />struk_arsip berisi <b>{Number(arsip).toLocaleString("id-ID")}</b> baris milikmu.</p></section>
+    </div>
+  );
+}
+
+/* 20. Tabel ringkasan */
+export function SummaryView({ rows, hari, struk, omzet, uji }) {
+  const mx = Math.max(...rows.map(r => r.omzet), 1);
+  return (
+    <div className="dash">
+      <div className="kpis"><Kpi icon={TrendingUp} label="Total omzet" value={omzet} fmt={rp} /><Kpi icon={Receipt} label="Struk terhitung" value={struk} tone="b" /><Kpi icon={BarChart3} label="Baris ringkasan (hari)" value={hari} tone="p" /></div>
+      <section className="panel"><h4>Omzet {rows.length} hari terakhir (dari ringkasan_harian)</h4>
+        {rows.map((r, i) => <div className="bar-row" key={r.tanggal}><span className="rk">{i + 1}</span><div><b>{r.tanggal}</b><div className="bar"><i style={{ width: r.omzet / mx * 100 + "%", "--i": i }} /></div></div><em>{rp(r.omzet)}</em></div>)}
+        <small>Satu baris per hari, dibaca langsung tanpa menjumlahkan puluhan ribu struk.</small></section>
+      {uji && <section className="panel"><h4>Uji trigger otomatis</h4><p className="trig"><Zap size={16} />Dua struk disisipkan pada {uji.tanggal} lalu dibatalkan: ringkasan menjadi <b>{uji.jumlah} struk / {rp(uji.omzet)}</b> tanpa kode aplikasi, dan tanggal lain tidak ikut berubah.</p></section>}
+    </div>
+  );
+}
+
 export function ResultView({ id, data }) {
   return { 1: <CatalogView produk={data.produk} />, 2: <CategoryView produk={data.produk} />, 3: <CrmView pelanggan={data.pelanggan} />, 4: <InvoiceView pesanan={data.pesanan} />, 5: <ReportView rows={data.rows} total={data.total} />,
     6: <CashierView kasir={data.kasir} />, 7: <ReceiptView struk={data.struk} />, 8: <IntegrityView rules={data.rules} struk={data.struk} item={data.item} />, 9: <LedgerView mutasi={data.mutasi} stok={data.stok} />, 10: <ShiftView rows={data.rows} total={data.total} uji={data.uji} />,
-    11: <HashView rows={data.rows} />, 12: <AuditView rows={data.rows} aktif={data.aktif} dihapus={data.dihapus} uji={data.uji} />, 13: <RbacView grid={data.grid} izin={data.izin} users={data.users} />, 14: <ApiView tests={data.tests} sample={data.sample} payloads={data.payloads} />, 15: <ProcView uji={data.uji} /> }[id];
+    11: <HashView rows={data.rows} />, 12: <AuditView rows={data.rows} aktif={data.aktif} dihapus={data.dihapus} uji={data.uji} />, 13: <RbacView grid={data.grid} izin={data.izin} users={data.users} />, 14: <ApiView tests={data.tests} sample={data.sample} payloads={data.payloads} />, 15: <ProcView uji={data.uji} />,
+    16: <GrantView user={data.user} db={data.db} grants={data.grants} allowed={data.allowed} denied={data.denied} />, 17: <RestoreView tabel={data.tabel} db={data.db} />, 18: <IndexView total={data.total} explain={data.explain} kolom={data.kolom} ms={data.ms} tanggal={data.tanggal} hasil={data.hasil} />, 19: <ArchiveView uji={data.uji} arsip={data.arsip} />, 20: <SummaryView rows={data.rows} hari={data.hari} struk={data.struk} omzet={data.omzet} uji={data.uji} /> }[id];
 }

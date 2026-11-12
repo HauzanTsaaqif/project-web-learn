@@ -1,6 +1,6 @@
 # project-web-learn (DataQuest Lab)
 
-Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 15 kasus bertingkat (Minggu 1: kasus 1-5, Minggu 2: kasus 6-10, Minggu 3: kasus 11-15). Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
+Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQL lokal** (XAMPP atau Laragon) untuk menyelesaikan 20 kasus bertingkat (Minggu 1: kasus 1-5, Minggu 2: kasus 6-10, Minggu 3: kasus 11-15, Minggu 4: kasus 16-20). Aplikasi membaca skema dan data dari MySQL tersebut, menampilkan error yang nyata jika ada yang salah, dan menampilkan antarmuka "dunia kerja" saat kasus lolos. Setiap kasus yang lolos menambah poin ke leaderboard (`be-web-learn`), **sekali saja per kasus**.
 
 ## Daftar isi
 1. [Prasyarat](#prasyarat)
@@ -13,6 +13,7 @@ Aplikasi latihan database berbasis **Next.js**. Mahasiswa membangun skema **MySQ
 8. [Daftar kasus](#daftar-kasus)
 9. [Minggu 2: update & kasus 6-10](#minggu-2-update--kasus-6-10)
    - [Minggu 3: update & kasus 11-15](#minggu-3-update--kasus-11-15)
+- [Minggu 4: update & kasus 16-20](#minggu-4-update--kasus-16-20)
    - [Riwayat poin & waktu pengerjaan](#riwayat-poin--waktu-pengerjaan)
 10. [Arsitektur & keamanan](#arsitektur--keamanan)
 11. [Troubleshooting](#troubleshooting)
@@ -217,6 +218,44 @@ Catatan Minggu 3:
 - **Kasus 12 dan 15** menguji perilaku di dalam transaksi yang **selalu di-ROLLBACK** (tanpa COMMIT dan tanpa DDL), jadi datamu tidak berubah. Syaratnya semua tabel terkait berengine **InnoDB**. Prosedur kasus 15 **tidak boleh** berisi `COMMIT` atau `START TRANSACTION`: transaksi diatur oleh pemanggil.
 - Kasus 15 memakai tabel kasus 6-9. Jika trigger kasus 10 masih aktif, stok dan mutasi tidak boleh tercatat dua kali.
 - Kerjakan berurutan 11 → 15; kasus 13 memakai tabel `pengguna` dari kasus 11 dan kasus 14 memakai `produk` (dan `dihapus_pada` dari kasus 12 bila ada).
+
+## Minggu 4: update & kasus 16-20
+
+Minggu 4 (Database di produksi) memakai **database yang sama**. Ada **dua variabel baru** di `.env.local` (lihat `.env.example`) dan satu script baru, jadi lakukan `git pull`, salin dua baris baru itu, lalu bangun ulang.
+
+```bash
+git pull
+npm install
+npm run build
+npm start        # http://localhost:3001
+```
+
+Tambahkan ke `.env.local` (diisi setelah kasus 16 kamu buat):
+
+```
+DB_APP_USER=kasir_app
+DB_APP_PASSWORD=<password yang kamu tentukan sendiri>
+```
+
+### Daftar kasus Minggu 4
+
+| # | Level | Poin | Fokus | Petunjuk |
+|---|---|---|---|---|
+| 16 | Pemula | 160 | **User aplikasi** `kasir_app` dengan hak `SELECT, INSERT, UPDATE` saja pada database latihan | SQL awal |
+| 17 | Dasar | 210 | **Pulihkan backup**: impor `data/kedai_backup.sql` ke database `kedai_restore` | tips + perintah |
+| 18 | Menengah | 260 | **Index komposit** `(kasir_id, waktu)` setelah `npm run seed:besar` (±50.000 struk) | tips + query |
+| 19 | Lanjutan | 310 | **Arsip data**: tabel `struk_arsip` dan prosedur `sp_arsip_struk(IN p_batas DATE)` | tips + cara memanggil |
+| 20 | Mahir | 360 | **Tabel ringkasan** `ringkasan_harian` yang dijaga trigger `AFTER INSERT` pada `struk` | tanpa petunjuk |
+
+Total Minggu 4: **1300 poin** (Minggu 1-4 = **4600 poin**).
+
+Catatan Minggu 4:
+- Kasus 16-20 **ditutup secara bawaan**; dosen membukanya dari dashboard.
+- **Kasus 16** login ke MySQL sebagai `DB_APP_USER`, membaca `SHOW GRANTS`, dan menolak jika ada hak berlebih (`ALL PRIVILEGES`, `DROP`, `ALTER`, `DELETE`, `GRANT OPTION`, hak global, atau hak di database lain). Bila muncul *Access denied*, buat user juga untuk host `127.0.0.1`.
+- **Kasus 17** membaca database `kedai_restore` dan mencocokkan jumlah baris serta checksum tiap tabel dengan isi backup. Impor yang terhenti di tengah akan terdeteksi; hapus database lalu ulangi.
+- **Kasus 18** butuh data besar: jalankan `npm run seed:besar` (±6 detik; aman diulang, hanya menyentuh baris bernomor `BSR-`; pakai `-- --ulang` untuk mengisi ulang). Aplikasi menjalankan `EXPLAIN` pada query laporan dan menolak `type = ALL`, index yang bukan komposit, atau urutan kolom yang terbalik.
+- **Kasus 19 dan 20** menguji di dalam transaksi yang **selalu di-ROLLBACK** (data uji tahun 1999 dan 2037), jadi datamu tidak berubah. Prosedur kasus 19 **tidak boleh** berisi `COMMIT` atau `START TRANSACTION`. Kasus 20 mewajibkan **trigger** (bukan EVENT) karena hasilnya harus langsung bisa diuji.
+- Kasus 18-20 memakai tabel `kasir`, `metode_bayar`, dan `struk` dari kasus 6-7. Kerjakan berurutan 16 → 20.
 
 ## Riwayat poin & waktu pengerjaan
 

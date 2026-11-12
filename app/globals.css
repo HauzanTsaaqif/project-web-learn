@@ -162,3 +162,10 @@ button{font:inherit;cursor:pointer}
 .pay{display:flex;flex-wrap:wrap;gap:6px}.pay code{background:#FFF1F2;color:#9F1239;font:600 .72rem var(--mono);padding:4px 9px;border-radius:8px}
 .termx{margin:0;background:#0F1A14;color:#E6F5EA;border-radius:12px;padding:14px;font:400 .78rem/1.7 var(--mono);overflow-x:auto;white-space:pre-wrap}.termx .p{color:#8FB09B}.termx .o{color:#FBBF24}.termx b{color:#BFE6C9}.termx.err{color:#FDA4AF}
 @media(max-width:900px){.hash-grid{grid-template-columns:1fr}}
+
+/* riwayat: bonus & penalti dari dosen */
+.hist .neg{color:#B42318}
+.hist-tag{display:inline-block;font:700 .7rem var(--head);border-radius:999px;padding:.2em .7em;margin-right:8px;background:var(--g100);color:var(--g800)}
+.hist-tag.penalti{background:#FEECEA;color:#B42318}
+.hist tr.adj td{background:#FAFDFB}.hist tr.penalti td{background:#FFF8F7}
+.hist .why{display:block;white-space:normal;max-width:420px;margin-top:3px;font-weight:500;color:var(--n500);font-size:.75rem}
