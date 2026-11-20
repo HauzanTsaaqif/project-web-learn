@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Archive, ArrowLeftRight, ArrowRight, BarChart3, Check, ChevronDown, Clock, Cog, Database, Gauge, KeyRound, Layers, Lock, LogOut, Package, Plug, Receipt, ReceiptText, ShieldCheck, Trophy, UserCog, Users, Zap } from "lucide-react";
 import { CASES, WEEKS } from "@/lib/cases";
 import { Dobi, useToast } from "./ui";
+import LiveCard from "./LiveCard";
 
 export const ICONS = { package: Package, layers: Layers, users: Users, receipt: Receipt, chart: BarChart3, usercog: UserCog, receipttext: ReceiptText, lock: Lock, arrows: ArrowLeftRight, zap: Zap, shield: ShieldCheck, archive: Archive, keyround: KeyRound, plug: Plug, cog: Cog, database: Database, gauge: Gauge };
 
@@ -74,6 +75,7 @@ export default function Dashboard() {
             <div className="prog2"><i style={{ width: `${got / total * 100}%` }} /></div><small>{wk.label}: {got} dari {total} poin terkumpul • {cnt(week)}/{list.length} kasus selesai</small></div>
           <Dobi className="hero-m" />
         </section>
+        <LiveCard />
         <nav className="weeks" aria-label="Pilih minggu">
           {WEEKS.map(w => <button key={w.week} className={w.week === week ? "on" : ""} onClick={() => setSel(w.week)}><b>{w.label}</b><small>{st.perWeek?.[w.week] ?? cnt(w.week)}/{all(w.week)} selesai</small></button>)}
         </nav>

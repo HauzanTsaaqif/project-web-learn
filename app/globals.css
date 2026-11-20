@@ -169,3 +169,29 @@ button{font:inherit;cursor:pointer}
 .hist-tag.penalti{background:#FEECEA;color:#B42318}
 .hist tr.adj td{background:#FAFDFB}.hist tr.penalti td{background:#FFF8F7}
 .hist .why{display:block;white-space:normal;max-width:420px;margin-top:3px;font-weight:500;color:var(--n500);font-size:.75rem}
+
+/* ===== Live Task (minggu 5) ===== */
+.lv-banner{position:sticky;top:58px;z-index:30;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 20px;padding:10px clamp(14px,4vw,40px);background:var(--g800);color:#fff;border-bottom:3px solid var(--g500);transition:background .4s}
+.lv-banner small,.lv-banner .lv-err{color:#FDE68A}
+.lv-banner.frz{background:#1E3A8A;border-color:#60A5FA}.lv-banner.low{background:#7C2D12;border-color:#FB923C}.lv-banner.lv-wait{background:var(--n500)}
+.lv-b1,.lv-b2{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+.lv-ph{display:inline-flex;gap:6px;align-items:center;font:700 .85rem var(--body);opacity:.9}
+.lv-time{display:inline-flex;gap:8px;align-items:center;font:900 clamp(1.5rem,4vw,2.2rem) var(--mono);letter-spacing:.02em}
+.lv-stat{display:inline-flex;gap:6px;align-items:center;font:600 .85rem var(--body);background:rgba(255,255,255,.14);padding:4px 12px;border-radius:999px}.lv-stat b{font-weight:900}
+.lv-stat.ice{background:#DBEAFE;color:#1E3A8A}.lv-stat.fin{background:#FDE68A;color:#78350F}
+.lv-hero{background:linear-gradient(135deg,#fff,var(--g50));border:1px solid var(--g200);border-radius:26px;padding:clamp(18px,3vw,30px);margin-top:16px;display:grid;gap:8px;animation:rise .5s var(--ease)}
+.lv-hero h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900}.lv-hero p{color:var(--n500);max-width:640px}.lv-act{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}
+.lv-prep{background:#fff;border:1px solid var(--n200);border-radius:20px;padding:clamp(14px,2.4vw,22px);margin-top:14px;display:grid;gap:10px}.lv-prep h3{display:flex;gap:8px;align-items:center;font:800 1rem var(--head)}.lv-prep code{font-family:var(--mono)}
+.lv-warn{display:flex;gap:8px;align-items:flex-start;background:#FEF3C7;color:#78350F;border-radius:12px;padding:10px 12px}.lv-warn svg{flex:none;margin-top:3px}
+.lv-ok{display:flex;gap:8px;align-items:center;color:var(--g800);font:600 .88rem var(--body);margin-top:12px}
+.lv-reason{display:flex;gap:8px;align-items:center;color:var(--n500);font-size:.88rem;margin:-6px 0 12px}
+.lv-env{background:#FEF3C7;color:#78350F}.lv-env small{color:#92400E}.lv-ice{background:#DBEAFE;color:#1E3A8A}.lv-ice small{color:#1D4ED8}
+.lv-db code{font-family:var(--mono)}
+.lv-card{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1E3A8A,#047857);color:#fff;border-radius:20px;padding:14px 18px;margin-top:14px;animation:rise .5s var(--ease)}
+.lv-card b{display:block;font:800 1rem var(--head)}.lv-card small{color:#BFDBFE}.lv-card>div{flex:1}.lv-card .go{color:#fff}
+.lv-card-i{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18)}
+.lv-cel{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,rgba(6,95,70,.96),rgba(6,40,30,.98));color:#fff;text-align:center;overflow:hidden;animation:rise .4s var(--ease)}
+.lv-cel .cf{position:absolute;top:30%}
+.lv-cel-b{display:grid;justify-items:center;gap:12px;padding:24px;max-width:520px}.lv-cel-b svg{color:#FBBF24}.lv-cel-b h2{font:900 clamp(1.5rem,5vw,2.4rem) var(--head)}
+.lv-rank{font-size:1.2rem}.lv-rank b{font-size:2rem;color:#FBBF24}
+@media(max-width:640px){.lv-banner{top:54px}}
