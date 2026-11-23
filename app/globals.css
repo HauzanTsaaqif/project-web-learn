@@ -169,3 +169,6 @@ button{font:inherit;cursor:pointer}
 .hist-tag.penalti{background:#FEECEA;color:#B42318}
 .hist tr.adj td{background:#FAFDFB}.hist tr.penalti td{background:#FFF8F7}
 .hist .why{display:block;white-space:normal;max-width:420px;margin-top:3px;font-weight:500;color:var(--n500);font-size:.75rem}
+.hist-sum{margin:6px 0 12px;font-size:.92rem;line-height:1.5}
+.hist-sum .pos{color:#0A7A45}.hist-sum .neg{color:#B42318}
+.hist-sum small.why{display:block;margin-top:4px;color:var(--g600,#667085);font-size:.78rem}

@@ -15,11 +15,14 @@ export const dur = s => (s == null ? "-" : s < 60 ? `${s} dtk` : s < 3600 ? `${M
 function History({ poin }) {
   const [open, setOpen] = useState(false), [h, setH] = useState(null);
   useEffect(() => { if (open && !h) fetch("/api/history").then(r => r.json()).then(setH).catch(() => setH({ rows: [], total: 0 })); }, [open]); // eslint-disable-line
-  const rows = h?.rows || [], fmt = v => (v ? new Date(v).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-");
+  const rows = h?.rows || [], sumOf = t => rows.filter(r => (r.type || "poin") === t).reduce((a, r) => a + (r.delta ?? r.points), 0);
+  const base = sumOf("poin"), bonus = sumOf("bonus"), pen = sumOf("penalti"), fmt = v => (v ? new Date(v).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-");
   return (
     <section className="hist">
       <button className="hist-h" onClick={() => setOpen(o => !o)} aria-expanded={open}><Clock size={18} /><b>Riwayat poin</b><small>{poin ?? 0} poin terkumpul</small><ChevronDown size={18} className={open ? "up" : ""} /></button>
       {open && (!h ? <p className="mut">Memuat...</p> : !rows.length ? <p className="mut">{h.unavailable ? "Riwayat belum tersedia di backend." : "Belum ada poin masuk. Selesaikan kasus pertamamu."}</p> :
+        <>
+        <p className="hist-sum">Poin dasar <b>{base}</b>{bonus > 0 && <> + bonus <b className="pos">{bonus}</b></>}{pen < 0 && <> − penalti <b className="neg">{-pen}</b></>} = total <b>{h.total ?? base + bonus + pen}</b>{(bonus > 0 || pen < 0) && <small className="why">Bonus diberikan bila tugas dikumpulkan lebih awal dari deadline; penalti bila dikumpulkan setelah deadline. Alasan tiap baris ada di tabel di bawah.</small>}</p>
         <div className="tw"><table><thead><tr><th>Kasus</th><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Percobaan</th><th>Poin</th><th>Total</th></tr></thead>
           <tbody>{rows.map(r => {
             const adj = r.type === "bonus" || r.type === "penalti", d = r.delta ?? r.points;
@@ -27,7 +30,7 @@ function History({ poin }) {
               <td>{adj && <span className={`hist-tag ${r.type}`}>{r.type === "bonus" ? "Poin bonus" : "Poin penalti"}</span>}<b>{r.case_id}</b> {r.title}{adj && r.reason && <small className="why">{r.reason}</small>}</td>
               <td>{adj ? "-" : fmt(r.started_at)}</td><td>{fmt(r.completed_at)}</td><td>{adj ? "-" : dur(r.duration_seconds)}</td><td>{adj ? "-" : r.attempts ?? "-"}</td>
               <td><b className={d < 0 ? "neg" : "pos"}>{d > 0 ? `+${d}` : d}</b></td><td>{r.running_total}</td></tr>;
-          })}</tbody></table></div>)}
+          })}</tbody></table></div></>)}
     </section>
   );
 }
